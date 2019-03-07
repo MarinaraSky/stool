@@ -1,0 +1,18 @@
+#!/bin/bash
+
+/bin/sleep 2
+
+source /root/.bashrc
+
+if ps -elf | grep -v grep | grep stormdrain ; then
+    exit 0
+elif ps -elf | grep -v grep | grep tmux ; then
+    exit 0
+else
+    /usr/bin/tmux new-session -d -s listener
+    /usr/bin/tmux send-keys -t listener "/root/stormdrain.py" C-m
+    /usr/bin/tmux split-window -h
+    /usr/bin/tmux split-window -v
+    #/usr/bin/tmux -2 attach-session -d -s
+    /bin/echo "Started listener: $(date)" >> /root/listenlog.txt
+fi
