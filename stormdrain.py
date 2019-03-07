@@ -51,55 +51,85 @@ class Packet:
                         molecule.data)
         return my_hex
 
-    def print_chain(self):
-        for molecule in self.raw:
-            if molecule.data != 0:
-                if(molecule.left_index <= len(self.raw)):
-                    print("Left id: ", self.raw[molecule.left_index])
-                if(molecule.right_index <= len(self.raw)):
-                    print("Right id: ", self.raw[molecule.right_index])
+    def print_chain(self, moles):
+        my_str = ""
+        index = 1
+        for molecule in moles:
+            my_str += "{}: ".format(index)
+            index += 1
+            my_str += molecule.__str__()
+        return my_str
+
+    def show_links(self, moles):
+        for molecule in moles:
+            if
 
     def demap(self):
         for molecule in list(self.raw):
+            print("RAW: ", molecule)
             if molecule.data != 0:
                 if 0 <= molecule.left_index <= len(self.raw):
                     molecule.left_index = self.raw[molecule.left_index - 1].data
                 else:
                     print("Trash->", molecule)
+                    molecule.chem = 3
                     self.m_trash.add(molecule)
+                    #self.raw.remove(molecule)
                     molecule.left_index = 0
                 #print(molecule)
                 if 0 <= molecule.right_index <= len(self.raw):
                     molecule.right_index = self.raw[molecule.right_index - 1].data
                 else:
-                    print("Trash->", molecule)
+                    print("Trash-<", molecule)
+                    molecule.chem = 3
                     self.m_trash.add(molecule)
+                    #self.raw.remove(molecule)
                     molecule.right_index = 0
-                if molecule.left_index == molecule.right_index == 0:
-                    self.m_merc.add(molecule)
+                #if molecule.left_index == molecule.right_index == 0:
+                #    self.m_merc.add(molecule)
             #print(molecule)
             if molecule.data == 0:
                 self.raw.remove(molecule)
+        for molecule in self.raw:
+            if molecule.chem == 3: # trash
+                self.m_trash.add(molecule)
+                #self.raw.remove(molecule)
+                for raw_mole in self.raw:
+                    if raw_mole.right_index == molecule.data:
+                        raw_mole.right_index = 0
+                    if raw_mole.left_index == molecule.data:
+                        raw_mole.left_index = 0
+                #self.raw.remove(molecule)
+            elif molecule.chem == 2: #haz
+                self.m_merc.add(molecule)
+                #self.raw.remove(molecule)
+                for raw_mole in self.raw:
+                    if raw_mole.right_index == molecule.data:
+                        raw_mole.right_index = 0
+                    if raw_mole.left_index == molecule.data:
+                        raw_mole.left_index = 0
+            self.raw = set(self.raw).difference(self.m_trash)
+            self.raw = set(self.raw).difference(self.m_merc)
+
         #self.raw = set(self.raw).difference(self.m_merc)
-        self.m_merc = self.m_merc.difference(self.m_trash)
-        self.m_trash = self.m_trash.difference(self.m_merc)
-        self.raw = set(self.raw).difference(self.m_trash)
-        self.raw = set(self.raw).difference(self.m_merc)
-        for molecule in self.m_trash:
-            print(molecule)
-            for raw_mole in self.raw:
-                if raw_mole.right_index == molecule.data:
-                    raw_mole.right_index = 0
-                if raw_mole.left_index == molecule.data:
-                    raw_mole.left_index = 0
-            #self.raw.remove(molecule)
-        for molecule in self.m_merc:
-            print(molecule)
-            for raw_mole in self.raw:
-                if raw_mole.right_index == molecule.data:
-                    raw_mole.right_index = 0
-                if raw_mole.left_index == molecule.data:
-                    raw_mole.left_index = 0
+        #self.m_merc = self.m_merc.difference(self.m_trash)
+        #self.raw = set(self.raw).difference(self.m_trash)
+        #self.raw = set(self.raw).difference(self.m_merc)
+        #for molecule in self.m_trash:
+        #    print(molecule)
+        #    for raw_mole in self.raw:
+        #        if raw_mole.right_index == molecule.data:
+        #            raw_mole.right_index = 0
+        #        if raw_mole.left_index == molecule.data:
+        #            raw_mole.left_index = 0
+        #    #self.raw.remove(molecule)
+        #for molecule in self.m_merc:
+        #    print(molecule)
+        #    for raw_mole in self.raw:
+        #        if raw_mole.right_index == molecule.data:
+        #            raw_mole.right_index = 0
+        #        if raw_mole.left_index == molecule.data:
+        #            raw_mole.left_index = 0
         #    self.raw.remove(molecule)
 
 
@@ -137,7 +167,7 @@ class Packet:
         air_to_add = math.ceil(last * .03)
         print("Air to add: ", air_to_add)
         for x in range(0, air_to_add):
-            moles.append(Molecule(0, 0, last))
+            moles.append(Molecule(0, 0, last, last))
         return moles
 
     def resize(self, moles, payload):
@@ -152,28 +182,78 @@ class Packet:
 
 class Molecule:
     mole_id = 1
-    def __init__(self, data, left_index, right_index):
+    def __init__(self, data, left_index, right_index, num):
         self.data = data
         self.left_index = left_index
         self.right_index = right_index
-        self.chem = self.identify()
+        self.chem = self.identify(num)
         self.mole = Molecule.mole_id
         if data != 0:
             Molecule.mole_id += 1
 
     def __str__(self):
-        my_str = "{} <-- Data: {} --> {}\n".format(self.left_index, self.data, self.right_index)
+        my_str = "{} <-- Data: {}({}) --> {}\n".format(self.left_index, self.data, self.chem, self.right_index)
         return my_str
 
     def full_info(self):
         my_str = "Data: {} LI: {} RI: {}\n".format(self.data, self.left_index, self.right_index)
         return my_str
 
-    def identify(self):
+    def identify(self, num):
         if self.data == 0:   # Air
             return 0
-        elif self.right_index == self.left_index:
+        if self.undulating():
+            return 4    #Ammonia
+        if self.right_index >= num:
+            return 3    # trash
+        if self.left_index >= num:
+            return 3    # trash
+        if self.right_index == self.left_index == 0:
+            return 2    # Haz
+        if self.right_index == self.left_index:
             return 1    # Chlorine
+        else:
+            return 99
+
+    def undulating(self):
+        GLG = False
+        LGL = False
+        turn = False
+        num_str = str(self.data)
+        if len(num_str) <= 2:
+            return False
+        for i in range(1, len(num_str)):
+            if i == 1:
+                if num_str[i] > num_str[i-1]:
+                    LGL = True
+                elif num_str[i] < num_str[i-1]:
+                    GLG = True
+                else:
+                    return False
+            if GLG == True:
+                if turn == True:
+                    if num_str[i] > num_str[i-1]:
+                        turn ^= turn
+                    else:
+                        return False
+                else:
+                    if num_str[i] < num_str[i-1]:
+                        turn ^= turn
+                    else:
+                        return False
+            if LGL == True:
+                if turn == True:
+                    if num_str[i] > num_str[i-1]:
+                        turn ^= turn
+                    else:
+                        return False
+                else:
+                    if num_str[i] < num_str[i-1]:
+                        turn ^= turn
+                    else:
+                        return False
+        return True
+
 
 
 
@@ -222,25 +302,31 @@ def listen(port, conn_type):
                         trash_count += 1
                     else:
                         water_count += 1
-                    p.raw.append(Molecule(m_data, m_left_index, m_right_index))
+                    p.raw.append(Molecule(m_data, m_left_index, m_right_index, num_p))
             print("wastewater")
             p.demap()
-            print(p)
+            #print(p)
             p.resize(p.raw, "water")
             p.remap(p.raw)
-            print(p)
+            #print(p)
+            print("====FRESH====")
+            print(p.print_chain(p.raw))
             data = bytes.fromhex(p.hex(p.raw, "water"))
             handle_water(my_sock, data, UDP, 1111)
             if p.m_trash:
                 p.resize(p.m_trash, "water")
                 p.remap(p.m_trash)
                 p.water = 1
+                print("====TRASH====")
+                print(p.print_chain(p.m_trash))
                 data = bytes.fromhex(p.hex(p.m_trash, "water"))
                 handle_water(my_sock, data, UDP, 2222)
             if p.m_merc:
                 p.resize(p.m_merc, "hazmat")
                 p.remap(p.m_merc)
                 p.water = 4
+                print("====HAZMAT====")
+                print(p.print_chain(p.m_merc))
                 data = bytes.fromhex(p.hex(p.m_merc, "hazmat"))
                 handle_water(my_sock, data, UDP, 8888)
 
