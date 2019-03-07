@@ -60,9 +60,6 @@ class Packet:
             my_str += molecule.__str__()
         return my_str
 
-    def show_links(self, moles):
-        for molecule in moles:
-            if
 
     def demap(self):
         for molecule in list(self.raw):
