@@ -16,6 +16,7 @@ class Packet:
         self.m_water = list()
         self.m_trash = set()
         self.m_merc = set()
+        self.sludge = set()
         Packet.pack_id += 1
 
     def __str__(self):
@@ -34,6 +35,11 @@ class Packet:
             my_str += molecule.__str__()
         my_str += "----Haz----\n"
         for molecule in self.m_merc:
+            my_str += "{}: ".format(index)
+            index += 1
+            my_str += molecule.__str__()
+        my_str += "----Sludge----\n"
+        for molecule in self.sludge:
             my_str += "{}: ".format(index)
             index += 1
             my_str += molecule.__str__()
@@ -65,6 +71,10 @@ class Packet:
         for molecule in list(self.raw):
             print("RAW: ", molecule)
             if molecule.data != 0:
+                if molecule.chem == 4:
+                    print("SLUDGE")
+                    self.sludge.add(molecule)
+                    continue
                 if 0 <= molecule.left_index <= len(self.raw):
                     molecule.left_index = self.raw[molecule.left_index - 1].data
                 else:
@@ -108,27 +118,6 @@ class Packet:
             self.raw = set(self.raw).difference(self.m_trash)
             self.raw = set(self.raw).difference(self.m_merc)
 
-        #self.raw = set(self.raw).difference(self.m_merc)
-        #self.m_merc = self.m_merc.difference(self.m_trash)
-        #self.raw = set(self.raw).difference(self.m_trash)
-        #self.raw = set(self.raw).difference(self.m_merc)
-        #for molecule in self.m_trash:
-        #    print(molecule)
-        #    for raw_mole in self.raw:
-        #        if raw_mole.right_index == molecule.data:
-        #            raw_mole.right_index = 0
-        #        if raw_mole.left_index == molecule.data:
-        #            raw_mole.left_index = 0
-        #    #self.raw.remove(molecule)
-        #for molecule in self.m_merc:
-        #    print(molecule)
-        #    for raw_mole in self.raw:
-        #        if raw_mole.right_index == molecule.data:
-        #            raw_mole.right_index = 0
-        #        if raw_mole.left_index == molecule.data:
-        #            raw_mole.left_index = 0
-        #    self.raw.remove(molecule)
-
 
     def remap(self, moles):
         zero = list()
@@ -170,18 +159,15 @@ class Packet:
     def resize(self, moles, payload):
         if payload == "water":
             self.size = (len(moles) + 1) * 8
-            print("Size: ", self.size)
         elif payload == "hazmat":
             self.size = (len(moles) * 4) + 8
-            print("Size: ", self.size)
 
 
 
 
 
 class Molecule:
-    mole_id = 1
-    def __init__(self, data, left_index, right_index, num):
+    mole_id = 1 def __init__(self, data, left_index, right_index, num):
         self.data = data
         self.left_index = left_index
         self.right_index = right_index
@@ -201,24 +187,40 @@ class Molecule:
     def identify(self, num):
         if self.data == 0:   # Air
             return 0
-        if self.undulating():
-            return 4    #Ammonia
-        if self.right_index >= num:
+        elif self.undulating() == True:
+            return 4    #Ammonia/Feces
+        elif self.right_index >= num:
             return 3    # trash
-        if self.left_index >= num:
+        elif self.left_index >= num:
             return 3    # trash
-        if self.right_index == self.left_index == 0:
+        elif self.right_index == self.left_index == 0:
             return 2    # Haz
-        if self.right_index == self.left_index:
+        elif self.right_index == self.left_index:
             return 1    # Chlorine
         else:
             return 99
+
+    def is_prime(self):
+        num = int(self.data)
+        if num == 1:
+            return False
+        i = 2
+
+        while i*i <= num:
+            if num % i == 0:
+                return False
+            i += 1
+        return True
 
     def undulating(self):
         GLG = False
         LGL = False
         turn = False
         num_str = str(self.data)
+        print("Inside: ", self.data)
+        if self.is_prime() == True:
+            print("prime")
+            return True
         if len(num_str) <= 2:
             return False
         for i in range(1, len(num_str)):
@@ -328,6 +330,14 @@ def listen(port, conn_type):
                 print(p.print_chain(p.m_merc))
                 data = bytes.fromhex(p.hex(p.m_merc, "hazmat"))
                 handle_water(my_sock, data, UDP, 8888)
+            if p.sludge:
+                p.remap(p.sludge)
+                p.resize(p.sludge, "water")
+                p.water = 8
+                print("====SLUDGE====")
+                print(p.print_chain(p.sludge))
+                data = bytes.fromhex(p.hex(p.sludge, "hazmat"))
+                handle_water(my_sock, data, UDP, 8888)
 
 
 
@@ -393,6 +403,14 @@ def listen(port, conn_type):
                     print(p.print_chain(p.m_merc))
                     data = bytes.fromhex(p.hex(p.m_merc, "hazmat"))
                     handle_water(my_sock, data, TCP, 8888)
+                if p.sludge:
+                    p.remap(p.sludge)
+                    p.resize(p.sludge, "water")
+                    p.water = 8
+                    print("====SLUDGE====")
+                    print(p.print_chain(p.sludge))
+                    data = bytes.fromhex(p.hex(p.sludge, "hazmat"))
+                    handle_water(my_sock, data, TCP, 8888)
                 #c.send(data)
                 #handle_water(c, data, TCP)
         c.close()
@@ -401,9 +419,7 @@ def listen(port, conn_type):
 def handle_water(sock, water, conn_type, port):
     if conn_type is UDP:
         sock.sendto(water, (DSTREAM, port))
-        print("sending: ", water.hex())
     else:
-        print("sending: ", water.hex())
         downstream = socket.socket()
         downstream.connect((DSTREAM, port))
         downstream.send(water)
