@@ -374,7 +374,7 @@ def listen(port, conn_type):
                 print("====FRESH====")
                 print(p.print_chain(p.raw))
                 data = bytes.fromhex(p.hex(p.raw, "water"))
-                handle_water(my_sock, data, UDP, 1111)
+                handle_water(my_sock, data, TCP, 1111)
                 if p.m_trash:
                     p.resize(p.m_trash, "water")
                     p.remap(p.m_trash)
@@ -382,7 +382,7 @@ def listen(port, conn_type):
                     print("====TRASH====")
                     print(p.print_chain(p.m_trash))
                     data = bytes.fromhex(p.hex(p.m_trash, "water"))
-                    handle_water(my_sock, data, UDP, 2222)
+                    handle_water(my_sock, data, TCP, 2222)
                 if p.m_merc:
                     p.resize(p.m_merc, "hazmat")
                     p.remap(p.m_merc)
@@ -390,7 +390,7 @@ def listen(port, conn_type):
                     print("====HAZMAT====")
                     print(p.print_chain(p.m_merc))
                     data = bytes.fromhex(p.hex(p.m_merc, "hazmat"))
-                    handle_water(my_sock, data, UDP, 8888)
+                    handle_water(my_sock, data, TCP, 8888)
                 #c.send(data)
                 #handle_water(c, data, TCP)
         c.close()
