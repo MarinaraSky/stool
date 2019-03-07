@@ -167,7 +167,8 @@ class Packet:
 
 
 class Molecule:
-    mole_id = 1 def __init__(self, data, left_index, right_index, num):
+    mole_id = 1
+    def __init__(self, data, left_index, right_index, num):
         self.data = data
         self.left_index = left_index
         self.right_index = right_index
@@ -187,7 +188,7 @@ class Molecule:
     def identify(self, num):
         if self.data == 0:   # Air
             return 0
-        elif self.undulating() == True:
+        elif self.() == True:
             return 4    #Ammonia/Feces
         elif self.right_index >= num:
             return 3    # trash
