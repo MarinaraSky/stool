@@ -188,7 +188,7 @@ class Molecule:
     def identify(self, num):
         if self.data == 0:   # Air
             return 0
-        elif self.() == True:
+        elif self.undulating() == True:
             return 4    #Ammonia/Feces
         elif self.right_index >= num:
             return 3    # trash
