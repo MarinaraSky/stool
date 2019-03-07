@@ -170,8 +170,10 @@ class Packet:
     def resize(self, moles, payload):
         if payload == "water":
             self.size = (len(moles) + 1) * 8
+            print("Size: ", self.size)
         elif payload == "hazmat":
             self.size = (len(moles) * 4) + 8
+            print("Size: ", self.size)
 
 
 
@@ -303,24 +305,24 @@ def listen(port, conn_type):
             print("wastewater")
             p.demap()
             #print(p)
-            p.resize(p.raw, "water")
             p.remap(p.raw)
+            p.resize(p.raw, "water")
             #print(p)
             print("====FRESH====")
             print(p.print_chain(p.raw))
             data = bytes.fromhex(p.hex(p.raw, "water"))
             handle_water(my_sock, data, UDP, 1111)
             if p.m_trash:
-                p.resize(p.m_trash, "water")
                 p.remap(p.m_trash)
+                p.resize(p.m_trash, "water")
                 p.water = 1
                 print("====TRASH====")
                 print(p.print_chain(p.m_trash))
                 data = bytes.fromhex(p.hex(p.m_trash, "water"))
                 handle_water(my_sock, data, UDP, 2222)
             if p.m_merc:
-                p.resize(p.m_merc, "hazmat")
                 p.remap(p.m_merc)
+                p.resize(p.m_merc, "hazmat")
                 p.water = 4
                 print("====HAZMAT====")
                 print(p.print_chain(p.m_merc))
@@ -368,24 +370,24 @@ def listen(port, conn_type):
                 print("wastewater")
                 p.demap()
                 #print(p)
-                p.resize(p.raw, "water")
                 p.remap(p.raw)
+                p.resize(p.raw, "water")
                 #print(p)
                 print("====FRESH====")
                 print(p.print_chain(p.raw))
                 data = bytes.fromhex(p.hex(p.raw, "water"))
                 handle_water(my_sock, data, TCP, 1111)
                 if p.m_trash:
-                    p.resize(p.m_trash, "water")
                     p.remap(p.m_trash)
+                    p.resize(p.m_trash, "water")
                     p.water = 1
                     print("====TRASH====")
                     print(p.print_chain(p.m_trash))
                     data = bytes.fromhex(p.hex(p.m_trash, "water"))
                     handle_water(my_sock, data, TCP, 2222)
                 if p.m_merc:
-                    p.resize(p.m_merc, "hazmat")
                     p.remap(p.m_merc)
+                    p.resize(p.m_merc, "hazmat")
                     p.water = 4
                     print("====HAZMAT====")
                     print(p.print_chain(p.m_merc))
@@ -399,7 +401,9 @@ def listen(port, conn_type):
 def handle_water(sock, water, conn_type, port):
     if conn_type is UDP:
         sock.sendto(water, (DSTREAM, port))
+        print("sending: ", water.hex())
     else:
+        print("sending: ", water.hex())
         downstream = socket.socket()
         downstream.connect((DSTREAM, port))
         downstream.send(water)
