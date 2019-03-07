@@ -82,6 +82,7 @@ class Packet:
                 self.raw.remove(molecule)
         #self.raw = set(self.raw).difference(self.m_merc)
         self.m_merc = self.m_merc.difference(self.m_trash)
+        self.m_trash = self.m_trash.difference(self.m_merc)
         self.raw = set(self.raw).difference(self.m_trash)
         self.raw = set(self.raw).difference(self.m_merc)
         for molecule in self.m_trash:
