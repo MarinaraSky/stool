@@ -65,12 +65,14 @@ class Packet:
                 if 0 <= molecule.left_index <= len(self.raw):
                     molecule.left_index = self.raw[molecule.left_index - 1].data
                 else:
+                    print("Trash->", molecule)
                     self.m_trash.add(molecule)
                     molecule.left_index = 0
                 #print(molecule)
                 if 0 <= molecule.right_index <= len(self.raw):
                     molecule.right_index = self.raw[molecule.right_index - 1].data
                 else:
+                    print("Trash->", molecule)
                     self.m_trash.add(molecule)
                     molecule.right_index = 0
                 if molecule.left_index == molecule.right_index == 0:
@@ -78,6 +80,10 @@ class Packet:
             #print(molecule)
             if molecule.data == 0:
                 self.raw.remove(molecule)
+        #self.raw = set(self.raw).difference(self.m_merc)
+        self.m_merc = self.m_merc.difference(self.m_trash)
+        self.raw = set(self.raw).difference(self.m_trash)
+        self.raw = set(self.raw).difference(self.m_merc)
         for molecule in self.m_trash:
             print(molecule)
             for raw_mole in self.raw:
@@ -85,15 +91,15 @@ class Packet:
                     raw_mole.right_index = 0
                 if raw_mole.left_index == molecule.data:
                     raw_mole.left_index = 0
-            self.raw.remove(molecule)
-      #  for molecule in self.m_merc:
-      #      print(molecule)
-      #      for raw_mole in self.raw:
-      #          if raw_mole.right_index == molecule.data:
-      #              raw_mole.right_index = 0
-      #          if raw_mole.left_index == molecule.data:
-      #              raw_mole.left_index = 0
-      #      self.raw.remove(molecule)
+            #self.raw.remove(molecule)
+        for molecule in self.m_merc:
+            print(molecule)
+            for raw_mole in self.raw:
+                if raw_mole.right_index == molecule.data:
+                    raw_mole.right_index = 0
+                if raw_mole.left_index == molecule.data:
+                    raw_mole.left_index = 0
+        #    self.raw.remove(molecule)
 
 
     def remap(self, moles):
