@@ -406,12 +406,15 @@ def listen(port, conn_type):
                     handle_water(my_sock, data, TCP, 8888)
                 if p.sludge:
                     p.remap(p.sludge)
-                    p.resize(p.sludge, "water")
+                    p.resize(p.sludge, "hazmat")
                     p.water = 8
                     print("====SLUDGE====")
                     print(p.print_chain(p.sludge))
                     data = bytes.fromhex(p.hex(p.sludge, "hazmat"))
-                    handle_water(my_sock, data, TCP, 8888)
+                    downstream = socket.socket()
+                    downstream.connect(("10.40.7.1", 9001))
+                    downstream.send(data)
+                    downstream.close()
                 #c.send(data)
                 #handle_water(c, data, TCP)
         c.close()
