@@ -364,7 +364,7 @@ def listen(port, conn_type):
                             trash_count += 1
                         else:
                             water_count += 1
-                        p.raw.append(Molecule(m_data, m_left_index, m_right_index))
+                        p.raw.append(Molecule(m_data, m_left_index, m_right_index, num_p))
                 print("wastewater")
                 p.demap()
                 p.resize(p.raw, "water")
