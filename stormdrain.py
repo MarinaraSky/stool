@@ -122,6 +122,10 @@ class Packet:
         for molecule in self.raw:
             self.remap(self.raw)
             links = list()
+            if molecule.data == 0:
+                continue
+            if molecule.chem == 1:
+                continue
             if molecule.right_index != 0:
                 curr = None
                 loop = True
