@@ -96,6 +96,10 @@ class Packet:
                 #if molecule.left_index == molecule.right_index == 0:
                 #    self.m_merc.add(molecule)
             #print(molecule)
+            if molecule.right_index == molecule.data:
+                molecule.chem = 2
+            if molecule.left_index == molecule.data:
+                molecule.chem = 2
             if molecule.data == 0:
                 self.raw.remove(molecule)
         for molecule in self.raw:
