@@ -13,6 +13,7 @@ class Packet:
         self.size = size
         self.cust = cust
         self.raw = list()
+        self.unknown = list()
         self.m_water = list()
         self.m_trash = set()
         self.m_merc = set()
@@ -115,8 +116,58 @@ class Packet:
                         raw_mole.right_index = 0
                     if raw_mole.left_index == molecule.data:
                         raw_mole.left_index = 0
-            self.raw = set(self.raw).difference(self.m_trash)
-            self.raw = set(self.raw).difference(self.m_merc)
+            self.raw = list(set(self.raw).difference(self.m_trash))
+            self.raw = list(set(self.raw).difference(self.m_merc))
+            self.raw = list(set(self.raw).difference(self.sludge))
+        for molecule in self.raw:
+            self.remap(self.raw)
+            links = list()
+            if molecule.right_index != 0:
+                curr = None
+                loop = True
+                while loop == True:
+                    print("right")
+                    if molecule.right_index != 0:
+                        if self.raw[molecule.right_index-1] not in links:
+                            links.append(self.raw[molecule.right_index-1])
+                            curr = links[-1]
+                        else:
+                            loop = False
+                    if molecule.left_index != 0:
+                        if self.raw[molecule.left_index-1] not in links:
+                            links.append(self.raw[molecule.left_index-1])
+                            curr = links[-1]
+                        else:
+                            loop = False
+                    else:
+                        loop = False
+            if molecule.left_index != 0:
+                curr = None
+                loop = True
+                while loop == True:
+                    print("left")
+                    if molecule.right_index != 0:
+                        if self.raw[molecule.right_index -1] not in links:
+                            links.append(self.raw[molecule.right_index-1])
+                            curr = links[-1]
+                        else:
+                            loop = False
+                    if molecule.left_index != 0:
+                        if self.raw[molecule.left_index-1] not in links:
+                            links.append(self.raw[molecule.left_index-1])
+                            curr = links[-1]
+                        else:
+                            loop = False
+                    else:
+                        loop = False
+            print("====Chain====")
+            for molecule in links:
+                print(molecule)
+            if links:
+                self.m_water.append(molecule)
+            else:
+                self.m_merc.add(molecule)
+        self.raw = list(set(self.raw).difference(self.m_merc))
 
 
     def remap(self, moles):
@@ -138,7 +189,7 @@ class Packet:
                     if final[x].data == mole.right_index:
                         mole.right_index = x + 1
         self.raw = final
-        self.raw = self.airate(self.raw)
+        #self.raw = self.airate(self.raw)
 
     def state(self):
         air = 0
@@ -276,35 +327,41 @@ def listen(port, conn_type):
             data, host = my_sock.recvfrom(4096)
             if not data:
                 break
-            #print(bytes(data))
-            w_type = int.from_bytes(data[:2], byteorder="big")
-            w_size = int.from_bytes(data[2:4], byteorder="big")
-            w_cust = int.from_bytes(data[4:8], byteorder="big")
-            #print(f"TEST: {w_type} {w_size} {w_cust}")
+            w_type = int.from_bytes(
+                    data[:2], byteorder="big")
+            w_size = int.from_bytes(
+                    data[2:4], byteorder="big")
+            w_cust = int.from_bytes(
+                    data[4:8], byteorder="big")
             p = Packet(w_type, w_size, w_cust)
-            #handle_water(my_sock, data, UDP)
             if p.water == 0:
-                #print("Num of moles: {}".format((int(w_size-8) / 8)+ 1))
                 index = 8
                 num_p = int((w_size - 8) / 8) + 1
                 water_count = 0
                 trash_count = 0
                 air_count = 0
                 for x in range(0, num_p):
-                    m_data = int.from_bytes(data[index:index + 4], byteorder="big")
+                    m_data = int.from_bytes(
+                            data[index:index + 4],
+                            byteorder="big")
                     index += 4
-                    m_left_index = int.from_bytes(data[index:index + 2], byteorder="big")
+                    m_left_index = int.from_bytes(
+                            data[index:index + 2],
+                            byteorder="big")
                     index += 2
-                    m_right_index = int.from_bytes(data[index:index + 2], byteorder="big")
+                    m_right_index = int.from_bytes(
+                            data[index:index + 2],
+                            byteorder="big")
                     index += 2
-                    #print(f"TEST: id:{m_data} {m_left_index} {m_right_index}")
                     if(m_left_index == 0 and m_right_index == 0):
                         air_count += 1
                     if(m_left_index > num_p or m_right_index > num_p):
                         trash_count += 1
                     else:
                         water_count += 1
-                    p.raw.append(Molecule(m_data, m_left_index, m_right_index, num_p))
+                    p.raw.append(
+                            Molecule(m_data, m_left_index,
+                                m_right_index, num_p))
             print("wastewater")
             p.demap()
             #print(p)
@@ -364,24 +421,31 @@ def listen(port, conn_type):
                     trash_count = 0
                     air_count = 0
                     for x in range(0, num_p):
-                        m_data = int.from_bytes(data[index:index + 4], byteorder="big")
+                        m_data = int.from_bytes(
+                                data[index:index + 4],
+                                byteorder="big")
                         index += 4
-                        m_left_index = int.from_bytes(data[index:index + 2], byteorder="big")
+                        m_left_index = int.from_bytes(
+                                data[index:index + 2],
+                                byteorder="big")
                         index += 2
-                        m_right_index = int.from_bytes(data[index:index + 2], byteorder="big")
+                        m_right_index = int.from_bytes(
+                                data[index:index + 2],
+                                byteorder="big")
                         index += 2
-                        #print(f"TEST: id:{m_data} {m_left_index} {m_right_index}")
                         if(m_left_index == 0 and m_right_index == 0):
                             air_count += 1
                         if(m_left_index > num_p or m_right_index > num_p):
                             trash_count += 1
                         else:
                             water_count += 1
-                        p.raw.append(Molecule(m_data, m_left_index, m_right_index, num_p))
+                        p.raw.append(
+                                Molecule(m_data, m_left_index,
+                                    m_right_index, num_p))
                 print("wastewater")
                 p.demap()
                 #print(p)
-                p.remap(p.raw)
+                #p.remap(p.raw)
                 p.resize(p.raw, "water")
                 #print(p)
                 print("====FRESH====")
