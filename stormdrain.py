@@ -124,6 +124,7 @@ class Packet:
             self.raw = list(set(self.raw).difference(self.m_merc))
             self.raw = list(set(self.raw).difference(self.sludge))
         self.print_chain(self.raw)
+        touched = list()
         for molecule in self.raw:
             links = list()
             if molecule.data == 0:
@@ -191,6 +192,8 @@ class Packet:
                 self.m_water.append(molecule)
             else:
                 self.m_merc.add(molecule)
+            touched + links
+        self.m_merc.union(set(self.raw).difference(touched))
         self.raw = list(set(self.raw).difference(self.m_merc))
 
 
