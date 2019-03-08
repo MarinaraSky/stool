@@ -119,8 +119,8 @@ class Packet:
             self.raw = list(set(self.raw).difference(self.m_trash))
             self.raw = list(set(self.raw).difference(self.m_merc))
             self.raw = list(set(self.raw).difference(self.sludge))
+        self.print_chain(self.raw)
         for molecule in self.raw:
-            self.remap(self.raw)
             links = list()
             if molecule.data == 0:
                 continue
@@ -132,14 +132,22 @@ class Packet:
                 while loop == True:
                     print("right")
                     if molecule.right_index != 0:
-                        if self.raw[molecule.right_index-1] not in links:
-                            links.append(self.raw[molecule.right_index-1])
+                        index = None
+                        for i, mole in enumerate(self.raw):
+                            if mole.data == molecule.right_index:
+                                index = i
+                        if self.raw[i] not in links:
+                            links.append(self.raw[i])
                             curr = links[-1]
                         else:
                             loop = False
                     if molecule.left_index != 0:
-                        if self.raw[molecule.left_index-1] not in links:
-                            links.append(self.raw[molecule.left_index-1])
+                        index = None
+                        for i, mole in enumerate(self.raw):
+                            if mole.data == molecule.right_index:
+                                index = i
+                        if self.raw[i] not in links:
+                            links.append(self.raw[i])
                             curr = links[-1]
                         else:
                             loop = False
@@ -151,14 +159,22 @@ class Packet:
                 while loop == True:
                     print("left")
                     if molecule.right_index != 0:
-                        if self.raw[molecule.right_index -1] not in links:
-                            links.append(self.raw[molecule.right_index-1])
+                        index = None
+                        for i, mole in enumerate(self.raw):
+                            if mole.data == molecule.right_index:
+                                index = i
+                        if self.raw[i] not in links:
+                            links.append(self.raw[i])
                             curr = links[-1]
                         else:
                             loop = False
                     if molecule.left_index != 0:
-                        if self.raw[molecule.left_index-1] not in links:
-                            links.append(self.raw[molecule.left_index-1])
+                        index = None
+                        for i, mole in enumerate(self.raw):
+                            if mole.data == molecule.left_index:
+                                index = i
+                        if self.raw[i] not in links:
+                            links.append(self.raw[i])
                             curr = links[-1]
                         else:
                             loop = False
@@ -193,7 +209,12 @@ class Packet:
                     if final[x].data == mole.right_index:
                         mole.right_index = x + 1
         self.raw = final
-        #self.raw = self.airate(self.raw)
+        for mole in self.raw:
+            if mole.left_index > len(self.raw):
+                mole.left_index = 0
+            if mole.right_index > len(self.raw):
+                mole.right_index = 0
+        self.raw = self.airate(self.raw)
 
     def state(self):
         air = 0
