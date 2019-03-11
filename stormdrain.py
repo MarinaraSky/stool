@@ -123,9 +123,9 @@ class Packet:
                             raw_mole.right_index = 0
                         if raw_mole.left_index == molecule.data:
                             raw_mole.left_index = 0
-                #self.raw = list(set(self.raw).difference(self.m_trash))
-                #self.raw = list(set(self.raw).difference(self.m_merc))
-                #self.raw = list(set(self.raw).difference(self.sludge))
+                self.raw = list(set(self.raw).difference(self.m_trash))
+                self.raw = list(set(self.raw).difference(self.m_merc))
+                self.raw = list(set(self.raw).difference(self.sludge))
             self.print_chain(self.raw)
             touched = list()
             for molecule in self.raw:
