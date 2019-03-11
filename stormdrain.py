@@ -105,7 +105,7 @@ class Packet:
                         touched.append(right)
             if len(touched) != len(set(touched)):
                 print("TESTING")
-                self.m_merc.union(self.raw)
+                self.m_merc.update(self.raw)
                 self.raw = list()
                 return
         self.clean()
