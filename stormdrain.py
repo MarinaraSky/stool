@@ -93,18 +93,17 @@ class Packet:
                     self.m_trash.add(molecule)
                     #self.raw.remove(molecule)
                     molecule.right_index = 0
-        touched = list()
+        bst = list()
         for molecule in self.raw:
             left = molecule.left_index
             right = molecule.right_index
             for mole in self.raw:
                 if molecule.data != mole.data:
                     if left == mole.left_index and left != 0:
-                        touched.append(left)
+                        bst.append(left)
                     if right == mole.right_index and right != 0:
-                        touched.append(right)
-            if len(touched) != len(set(touched)):
-                print("TESTING")
+                        bst.append(right)
+            if len(bst) != len(set(bst)):
                 self.m_merc.update(self.raw)
                 self.raw = list()
                 for molecule in set(self.m_merc):
@@ -214,7 +213,7 @@ class Packet:
                 else:
                     self.m_merc.add(molecule)
                 touched + links
-            self.m_merc.union(set(self.raw).difference(touched))
+            self.m_merc.update(set(self.raw).difference(touched))
             self.raw = list(set(self.raw).difference(self.m_merc))
             clean = True
 
