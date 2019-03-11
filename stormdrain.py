@@ -213,7 +213,7 @@ class Packet:
                 else:
                     self.m_merc.add(molecule)
                 touched + links
-            self.m_merc.update(set(self.raw).difference(touched))
+            self.m_merc.union(set(self.raw).difference(touched))
             self.raw = list(set(self.raw).difference(self.m_merc))
             clean = True
 
