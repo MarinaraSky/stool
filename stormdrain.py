@@ -95,19 +95,19 @@ class Packet:
                     molecule.right_index = 0
         self.clean()
         for molecule in self.raw:
+            touched = list()
             print("Test: ", molecule.data)
             left = molecule.left_index
             right = molecule.right_index
             for mole in self.raw:
                 if molecule.data != mole.data:
                     if left == mole.left_index and left != 0:
-                        self.m_merc.union(set(self.raw))
-                        self.raw = list()
-                        return
+                        touched.append(left)
                     if right == mole.right_index and right != 0:
-                        self.m_merc.union(set(self.raw))
-                        self.raw = list()
-                        return
+                        touched.append(right)
+            if len(touched) != len(set(touched)):
+                self.m_merc.union(self.raw)
+                self.raw = list()
 
     def clean(self):
         clean = False
