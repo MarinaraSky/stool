@@ -93,7 +93,21 @@ class Packet:
                     self.m_trash.add(molecule)
                     #self.raw.remove(molecule)
                     molecule.right_index = 0
-                    self.clean()
+        self.clean()
+        for molecule in self.raw:
+            print("Test: ", molecule.data)
+            left = molecule.left_index
+            right = molecule.right_index
+            for mole in self.raw:
+                if molecule.data != mole.data:
+                    if left == mole.left_index and left != 0:
+                        self.m_merc.union(set(self.raw))
+                        self.raw = list()
+                        return
+                    if right == mole.right_index and right != 0:
+                        self.m_merc.union(set(self.raw))
+                        self.raw = list()
+                        return
 
     def clean(self):
         clean = False
@@ -403,13 +417,14 @@ def listen(port, conn_type):
             print("wastewater")
             p.demap()
             #print(p)
-            p.remap(p.raw)
-            p.resize(p.raw, "water")
-            #print(p)
-            print("====FRESH====")
-            print(p.print_chain(p.raw))
-            data = bytes.fromhex(p.hex(p.raw, "water"))
-            handle_water(my_sock, data, UDP, 1111)
+            if p.raw:
+                p.remap(p.raw)
+                p.resize(p.raw, "water")
+                #print(p)
+                print("====FRESH====")
+                print(p.print_chain(p.raw))
+                data = bytes.fromhex(p.hex(p.raw, "water"))
+                handle_water(my_sock, data, UDP, 1111)
             if p.m_trash:
                 p.remap(p.m_trash)
                 p.resize(p.m_trash, "water")
