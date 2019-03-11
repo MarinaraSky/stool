@@ -107,6 +107,9 @@ class Packet:
                 print("TESTING")
                 self.m_merc.update(self.raw)
                 self.raw = list()
+                for molecule in self.m_merc:
+                    if molecule.data == 0:
+                        self.m_merc.remove(molecule)
                 return
         self.clean()
 
