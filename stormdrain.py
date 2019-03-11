@@ -101,7 +101,11 @@ class Packet:
                 if molecule.data != mole.data:
                     if left == mole.left_index and left != 0:
                         bst.append(left)
+                    if left == mole.right_index and left != 0:
+                        bst.append(left)
                     if right == mole.right_index and right != 0:
+                        bst.append(right)
+                    if right == mole.left_index and right != 0:
                         bst.append(right)
             if len(bst) != len(set(bst)):
                 self.m_merc.update(self.raw)
