@@ -93,108 +93,112 @@ class Packet:
                     self.m_trash.add(molecule)
                     #self.raw.remove(molecule)
                     molecule.right_index = 0
-                #if molecule.left_index == molecule.right_index == 0:
-                #    self.m_merc.add(molecule)
-            #print(molecule)
-            if molecule.right_index == molecule.data:
-                molecule.chem = 2
-            if molecule.left_index == molecule.data:
-                molecule.chem = 2
-            if molecule.data == 0:
-                self.raw.remove(molecule)
-        for molecule in self.raw:
-            if molecule.chem == 3: # trash
-                self.m_trash.add(molecule)
-                #self.raw.remove(molecule)
-                for raw_mole in self.raw:
-                    if raw_mole.right_index == molecule.data:
-                        raw_mole.right_index = 0
-                    if raw_mole.left_index == molecule.data:
-                        raw_mole.left_index = 0
-                #self.raw.remove(molecule)
-            elif molecule.chem == 2: #haz
-                self.m_merc.add(molecule)
-                #self.raw.remove(molecule)
-                for raw_mole in self.raw:
-                    if raw_mole.right_index == molecule.data:
-                        raw_mole.right_index = 0
-                    if raw_mole.left_index == molecule.data:
-                        raw_mole.left_index = 0
-            self.raw = list(set(self.raw).difference(self.m_trash))
+                    self.clean()
+
+    def clean(self):
+        clean = False
+        while not clean:
+            for molecule in list(self.raw):
+                if molecule.right_index == molecule.data:
+                    molecule.chem = 2
+                if molecule.left_index == molecule.data:
+                    molecule.chem = 2
+                if molecule.data == 0:
+                    self.raw.remove(molecule)
+            for molecule in self.raw:
+                if molecule.chem == 3: # trash
+                    self.m_trash.add(molecule)
+                    #self.raw.remove(molecule)
+                    for raw_mole in self.raw:
+                        if raw_mole.right_index == molecule.data:
+                            raw_mole.right_index = 0
+                        if raw_mole.left_index == molecule.data:
+                            raw_mole.left_index = 0
+                    #self.raw.remove(molecule)
+                elif molecule.chem == 2: #haz
+                    self.m_merc.add(molecule)
+                    #self.raw.remove(molecule)
+                    for raw_mole in self.raw:
+                        if raw_mole.right_index == molecule.data:
+                            raw_mole.right_index = 0
+                        if raw_mole.left_index == molecule.data:
+                            raw_mole.left_index = 0
+                #self.raw = list(set(self.raw).difference(self.m_trash))
+                #self.raw = list(set(self.raw).difference(self.m_merc))
+                #self.raw = list(set(self.raw).difference(self.sludge))
+            self.print_chain(self.raw)
+            touched = list()
+            for molecule in self.raw:
+                links = list()
+                if molecule.data == 0:
+                    continue
+                if molecule.chem == 1:
+                    continue
+                if molecule.right_index != 0:
+                    curr = None
+                    loop = True
+                    while loop == True:
+                        print("right")
+                        if molecule.right_index != 0:
+                            index = None
+                            for i, mole in enumerate(self.raw):
+                                if mole.data == molecule.right_index:
+                                    index = i
+                            if self.raw[i] not in links:
+                                links.append(self.raw[i])
+                                curr = links[-1]
+                            else:
+                                loop = False
+                        if molecule.left_index != 0:
+                            index = None
+                            for i, mole in enumerate(self.raw):
+                                if mole.data == molecule.right_index:
+                                    index = i
+                            if self.raw[i] not in links:
+                                links.append(self.raw[i])
+                                curr = links[-1]
+                            else:
+                                loop = False
+                        else:
+                            loop = False
+                if molecule.left_index != 0:
+                    curr = None
+                    loop = True
+                    while loop == True:
+                        print("left")
+                        if molecule.right_index != 0:
+                            index = None
+                            for i, mole in enumerate(self.raw):
+                                if mole.data == molecule.right_index:
+                                    index = i
+                            if self.raw[i] not in links:
+                                links.append(self.raw[i])
+                                curr = links[-1]
+                            else:
+                                loop = False
+                        if molecule.left_index != 0:
+                            index = None
+                            for i, mole in enumerate(self.raw):
+                                if mole.data == molecule.left_index:
+                                    index = i
+                            if self.raw[i] not in links:
+                                links.append(self.raw[i])
+                                curr = links[-1]
+                            else:
+                                loop = False
+                        else:
+                            loop = False
+                print("====Chain====")
+                for molecule in links:
+                    print(molecule)
+                if links:
+                    self.m_water.append(molecule)
+                else:
+                    self.m_merc.add(molecule)
+                touched + links
+            self.m_merc.union(set(self.raw).difference(touched))
             self.raw = list(set(self.raw).difference(self.m_merc))
-            self.raw = list(set(self.raw).difference(self.sludge))
-        self.print_chain(self.raw)
-        touched = list()
-        for molecule in self.raw:
-            links = list()
-            if molecule.data == 0:
-                continue
-            if molecule.chem == 1:
-                continue
-            if molecule.right_index != 0:
-                curr = None
-                loop = True
-                while loop == True:
-                    print("right")
-                    if molecule.right_index != 0:
-                        index = None
-                        for i, mole in enumerate(self.raw):
-                            if mole.data == molecule.right_index:
-                                index = i
-                        if self.raw[i] not in links:
-                            links.append(self.raw[i])
-                            curr = links[-1]
-                        else:
-                            loop = False
-                    if molecule.left_index != 0:
-                        index = None
-                        for i, mole in enumerate(self.raw):
-                            if mole.data == molecule.right_index:
-                                index = i
-                        if self.raw[i] not in links:
-                            links.append(self.raw[i])
-                            curr = links[-1]
-                        else:
-                            loop = False
-                    else:
-                        loop = False
-            if molecule.left_index != 0:
-                curr = None
-                loop = True
-                while loop == True:
-                    print("left")
-                    if molecule.right_index != 0:
-                        index = None
-                        for i, mole in enumerate(self.raw):
-                            if mole.data == molecule.right_index:
-                                index = i
-                        if self.raw[i] not in links:
-                            links.append(self.raw[i])
-                            curr = links[-1]
-                        else:
-                            loop = False
-                    if molecule.left_index != 0:
-                        index = None
-                        for i, mole in enumerate(self.raw):
-                            if mole.data == molecule.left_index:
-                                index = i
-                        if self.raw[i] not in links:
-                            links.append(self.raw[i])
-                            curr = links[-1]
-                        else:
-                            loop = False
-                    else:
-                        loop = False
-            print("====Chain====")
-            for molecule in links:
-                print(molecule)
-            if links:
-                self.m_water.append(molecule)
-            else:
-                self.m_merc.add(molecule)
-            touched + links
-        self.m_merc.union(set(self.raw).difference(touched))
-        self.raw = list(set(self.raw).difference(self.m_merc))
+            clean = True
 
 
     def remap(self, moles):
@@ -305,8 +309,6 @@ class Molecule:
         if self.is_prime() == True:
             print("prime")
             return True
-        if len(num_str) <= 2:
-            return False
         for i in range(1, len(num_str)):
             if i == 1:
                 if num_str[i] > num_str[i-1]:
@@ -316,25 +318,29 @@ class Molecule:
                 else:
                     return False
             if GLG == True:
+                print("GLG")
                 if turn == True:
                     if num_str[i] > num_str[i-1]:
-                        turn ^= turn
+                        turn ^= 1
                     else:
                         return False
                 else:
                     if num_str[i] < num_str[i-1]:
-                        turn ^= turn
+                        turn ^= 1
                     else:
                         return False
             if LGL == True:
+                print("LGL")
                 if turn == True:
-                    if num_str[i] > num_str[i-1]:
-                        turn ^= turn
+                    print("Comparing2: ", num_str[i], "-", num_str[i-1])
+                    if num_str[i] < num_str[i-1]:
+                        turn ^= 1
                     else:
                         return False
                 else:
-                    if num_str[i] < num_str[i-1]:
-                        turn ^= turn
+                    print("Comparing3: ", num_str[i], "-", num_str[i-1])
+                    if num_str[i] > num_str[i-1]:
+                        turn ^= 1
                     else:
                         return False
         return True
