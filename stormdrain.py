@@ -5,6 +5,7 @@ import struct
 import threading
 import time
 import math
+import ipaddress
 
 class Packet:
     pack_id = 0
@@ -18,6 +19,7 @@ class Packet:
         self.m_trash = set()
         self.m_merc = set()
         self.sludge = set()
+        self.body = False
         Packet.pack_id += 1
 
     def __str__(self):
@@ -56,6 +58,12 @@ class Packet:
             for molecule in moles:
                 my_hex += "{:08x}".format(
                         molecule.data)
+        if payload == "body":
+            err, cust = moles
+            my_hex += "{:04x}{:04x}".format(
+                    err,
+                    cust
+                    )
         return my_hex
 
     def print_chain(self, moles):
@@ -71,6 +79,9 @@ class Packet:
     def demap(self):
         for molecule in list(self.raw):
             print("RAW: ", molecule)
+            if molecule.data == 8675309:
+                print("Found")
+                self.body = True
             if molecule.data != 0:
                 if molecule.chem == 4:
                     print("SLUDGE")
@@ -269,6 +280,8 @@ class Packet:
             self.size = (len(moles) + 1) * 8
         elif payload == "hazmat":
             self.size = (len(moles) * 4) + 8
+        elif payload == "report":
+            self.size = 8
 
 
 
@@ -512,6 +525,7 @@ def listen(port, conn_type):
                     print("====FRESH====")
                     print(p.print_chain(p.raw))
                     data = bytes.fromhex(p.hex(p.raw, "water"))
+                    print("Raw: ", data)
                     handle_water(my_sock, data, TCP, 1111)
                 if p.m_trash:
                     p.remap(p.m_trash)
@@ -520,6 +534,7 @@ def listen(port, conn_type):
                     print("====TRASH====")
                     print(p.print_chain(p.m_trash))
                     data = bytes.fromhex(p.hex(p.m_trash, "water"))
+                    print("Trash: ", data)
                     handle_water(my_sock, data, TCP, 2222)
                 if p.m_merc:
                     p.remap(p.m_merc)
@@ -528,6 +543,7 @@ def listen(port, conn_type):
                     print("====HAZMAT====")
                     print(p.print_chain(p.m_merc))
                     data = bytes.fromhex(p.hex(p.m_merc, "hazmat"))
+                    print("Haz: ", data)
                     handle_water(my_sock, data, TCP, 8888)
                 if p.sludge:
                     p.remap(p.sludge)
@@ -536,10 +552,22 @@ def listen(port, conn_type):
                     print("====SLUDGE====")
                     print(p.print_chain(p.sludge))
                     data = bytes.fromhex(p.hex(p.sludge, "hazmat"))
+                    print("Sludge: ", data)
                     downstream = socket.socket()
                     downstream.connect(("10.40.7.1", 9001))
                     downstream.send(data)
                     downstream.close()
+                if p.body:
+                    print("====BODY====")
+                    msg = "ATTN: Jenny"
+                    p.size = 72
+                    p.water = 8
+                    header = (18, 0)
+                    data = bytes.fromhex(p.hex(header, "body"))
+                    data += socket.inet_aton(addr[0])
+                    data += msg.ljust(56, "\0").encode()
+                    print("Body: ", data.hex())
+                    handle_water(my_sock, data, TCP, 9999)
                 #c.send(data)
                 #handle_water(c, data, TCP)
         c.close()
