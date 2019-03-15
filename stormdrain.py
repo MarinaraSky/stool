@@ -272,7 +272,11 @@ class Packet:
         air_to_add = math.ceil(last * .03)
         print("Air to add: ", air_to_add)
         for x in range(0, air_to_add):
-            moles.append(Molecule(0, 0, last, last))
+            moles.append(Molecule(0, 0, 0, None))
+        for mole in moles:
+            if mole.left_index == mole.right_index == 0:
+                mole.right_index = last + 1
+                break
         return moles
 
     def resize(self, moles, payload):
